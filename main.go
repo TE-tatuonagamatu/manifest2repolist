@@ -31,44 +31,48 @@ type manifest struct {
 	Projects []project `xml:"project"`
 }
 
-var m map[string]bool
-var uniq []string
-
-func parseRepo(xmldoc []byte) error {
+func parseRepo(xmldoc []byte) ([]string, error) {
 	mt := manifest{}
 	err := xml.Unmarshal(xmldoc, &mt)
 	if err != nil {
-		return err
+		return nil, err
 	}
+	list := []string{}
 	for _, project := range mt.Projects {
-		if !m[project.Name] {
-			m[project.Name] = true
-			uniq = append(uniq, project.Name)
-		}
-	
-		//fmt.Printf("%s\n", project.Name)
+		list = append(list, project.Name)
 	}
-	return nil
+	return list, nil
 }
 
-func manifest2repolist(dirpath string, finfo os.FileInfo) error {
+func manifest2repolist(dirpath string, finfo os.FileInfo) ([]string, error) {
 	f, err := os.Open(filepath.Join(dirpath, finfo.Name()))
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer f.Close()
 	data := make([]byte, finfo.Size())
 	_, err = f.Read(data)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	return parseRepo(data)
 }
 
+func uniq(repolist []string) []string {
+	m := make(map[string]bool)
+	uniq := [] string{}
+
+	for _, l := range repolist {
+		if !m[l] {
+			m[l] = true
+			uniq = append(uniq, l)
+		}
+	}
+	return uniq
+}
+
 func main() {
-	m = make(map[string]bool)
-	uniq = [] string{}
 
 	dirPath := os.Args[1]
     files, err := ioutil.ReadDir(dirPath)
@@ -76,16 +80,19 @@ func main() {
         log.Fatal(err)
 	}
 
+	repolist := []string{}
 	for _, file := range files {
 		if (strings.HasSuffix(file.Name(), ".xml")) {
-			err := manifest2repolist(dirPath, file)
+			list, err := manifest2repolist(dirPath, file)
 			if err != nil {
 				log.Fatal(err)
 			}
+			repolist = append(repolist, list...)
 		}
 	}
 
-	for _, name := range uniq {
+	repolist = uniq(repolist)
+	for _, name := range repolist {
 		fmt.Printf("%s\n", name)
 	}
 }
