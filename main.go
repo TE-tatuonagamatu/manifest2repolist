@@ -11,23 +11,23 @@ import (
 )
 
 type remote struct {
-	Name string	`xml:"name,attr"`
+	Name  string `xml:"name,attr"`
 	Fetch string `xml:"fetch,attr"`
 }
 
 type defaultx struct {
 	Revision string `xml:"revision,attr"`
-	Remote string `xml:"remote,attr"`
+	Remote   string `xml:"remote,attr"`
 }
 
 type project struct {
 	Groups string `xml:"groups,attr"`
-	Name string `xml:"name,attr"`
-	Path string `xml:"path,attr"`
+	Name   string `xml:"name,attr"`
+	Path   string `xml:"path,attr"`
 }
 type manifest struct {
-	Remote   remote `xml:"remote"`
-	Default defaultx	`xml:"default"`
+	Remote   remote    `xml:"remote"`
+	Default  defaultx  `xml:"default"`
 	Projects []project `xml:"project"`
 }
 
@@ -61,7 +61,7 @@ func manifest2repolist(dirpath string, finfo os.FileInfo) ([]string, error) {
 
 func uniq(repolist []string) []string {
 	m := make(map[string]bool)
-	uniq := [] string{}
+	uniq := []string{}
 
 	for _, l := range repolist {
 		if !m[l] {
@@ -75,14 +75,14 @@ func uniq(repolist []string) []string {
 func main() {
 
 	dirPath := os.Args[1]
-    files, err := ioutil.ReadDir(dirPath)
-    if err != nil {
-        log.Fatal(err)
+	files, err := ioutil.ReadDir(dirPath)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	repolist := []string{}
 	for _, file := range files {
-		if (strings.HasSuffix(file.Name(), ".xml")) {
+		if strings.HasSuffix(file.Name(), ".xml") {
 			list, err := manifest2repolist(dirPath, file)
 			if err != nil {
 				log.Fatal(err)
